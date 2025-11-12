@@ -58,16 +58,18 @@ function getSamePronunciationReplacement(char: string): { value: string; isOutsi
   if (replacementChar) {
     return { value: replacementChar, isOutsideTopK: false };
   } else {
-    // No replacement in allowed characters, check if there's any other character with same pronunciation
-    const anyReplacement = samePronunciationChars.find(c => c !== char);
+    // No replacement in allowed characters, check if there's a better character
+    // The first character in the list is the most frequent one
+    const mostFrequentChar = samePronunciationChars[0];
 
-    if (anyReplacement) {
-      // Found a replacement but it's outside top-K
-      return { value: anyReplacement, isOutsideTopK: true };
-    } else {
-      // No replacement available at all, keep original
-      return { value: char, isOutsideTopK: true };
+    // If we found a most frequent character and it's different from original
+    if (mostFrequentChar && mostFrequentChar !== char) {
+      // Replace with the most frequent character (even if it's outside top-K)
+      return { value: mostFrequentChar, isOutsideTopK: true };
     }
+
+    // Original is already the most frequent or no other options
+    return { value: char, isOutsideTopK: true };
   }
 }
 
