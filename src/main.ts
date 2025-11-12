@@ -24,12 +24,34 @@ function hasMultiplePronunciations(char: string): boolean {
     style: pinyin.STYLE_TONE2, // We need tone2 style to be consistent with the rest of the code
     heteronym: true
   });
-  // Check if we got multiple pronunciations
-  return (result[0]?.length || 0) > 1;
+
+  const pronunciations = result[0] || [];
+
+  if (!allowDifferentTones) {
+    // Default behavior - check if there are multiple pronunciations including tone differences
+    return pronunciations.length > 1;
+  } else {
+    // Music mode - ignore tone differences when checking for multiple pronunciations
+    if (pronunciations.length <= 1) {
+      return false;
+    }
+
+    // Convert all pronunciations to the same style without tones and check if they are unique
+    const uniquePronunciationsWithoutTone = new Set<string>();
+
+    for (const pronunciation of pronunciations) {
+      // Extract the base pronunciation without tone (remove the last character which is the tone number)
+      const baseWithoutTone = pronunciation.replace(/\d$/, '');
+      uniquePronunciationsWithoutTone.add(baseWithoutTone);
+    }
+
+    // If there's more than one unique base pronunciation without tone, it's truly a multi-pronunciation character
+    return uniquePronunciationsWithoutTone.size > 1;
+  }
 }
 
 let currentTopK = 2500;
-let allowDifferentTones = true; // Default to true as per user request
+let allowDifferentTones = true; // Default to true (music mode enabled)
 let highlightMultiPronunciation = false; // Default to false as per user request
 const allowedCharacters = new Set<string>();
 let pronunciationMap: Map<string, string[]> = new Map(); // Maps pinyin to array of characters sorted by frequency
