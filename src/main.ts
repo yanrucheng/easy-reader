@@ -1,6 +1,8 @@
 import pinyin from 'pinyin';
 import characterFrequencyDataRaw from '../character-frequency.json';
-const characterFrequencyData: string[] = characterFrequencyDataRaw;
+const characterFrequencyData: string[] = (characterFrequencyDataRaw as (string | null)[]).filter(
+  (char): char is string => char !== null && char !== undefined && char !== ''
+);
 
 interface ReplacementConfig {
   pattern: RegExp;
