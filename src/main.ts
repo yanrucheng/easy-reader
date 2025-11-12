@@ -7,6 +7,7 @@ const characterFrequencyData: string[] = (characterFrequencyDataRaw as (string |
 interface ReplacementConfig {
   pattern: RegExp;
   value: string;
+  isOutsideTopK: boolean;
 }
 
 let currentTopK = 2500;
@@ -43,18 +44,31 @@ function getPinyinWithTone(char: string): string {
   return result[0]?.[0] || char;
 }
 
-function getSamePronunciationReplacement(char: string): string {
+function getSamePronunciationReplacement(char: string): { value: string; isOutsideTopK: boolean } {
   const charPinyin = getPinyinWithTone(char);
   const samePronunciationChars = pronunciationMap.get(charPinyin);
 
   if (!samePronunciationChars) {
-    return getPinyinWithTone(char);
+    return { value: char, isOutsideTopK: true };
   }
 
   // Find the first character in the same pronunciation list that is allowed
   const replacementChar = samePronunciationChars.find(c => allowedCharacters.has(c) && c !== char);
 
-  return replacementChar || getPinyinWithTone(char);
+  if (replacementChar) {
+    return { value: replacementChar, isOutsideTopK: false };
+  } else {
+    // No replacement in allowed characters, check if there's any other character with same pronunciation
+    const anyReplacement = samePronunciationChars.find(c => c !== char);
+
+    if (anyReplacement) {
+      // Found a replacement but it's outside top-K
+      return { value: anyReplacement, isOutsideTopK: true };
+    } else {
+      // No replacement available at all, keep original
+      return { value: char, isOutsideTopK: true };
+    }
+  }
 }
 
 function createPinyinReplacements(text: string): ReplacementConfig[] {
@@ -64,10 +78,14 @@ function createPinyinReplacements(text: string): ReplacementConfig[] {
 
   return uniqueChars
     .filter(char => !allowedCharacters.has(char))
-    .map(char => ({
-      pattern: new RegExp(char, 'g'),
-      value: getSamePronunciationReplacement(char)
-    }));
+    .map(char => {
+      const { value, isOutsideTopK } = getSamePronunciationReplacement(char);
+      return {
+        pattern: new RegExp(char, 'g'),
+        value,
+        isOutsideTopK
+      };
+    });
 }
 
 function escapeHtml(text: string): string {
@@ -84,17 +102,20 @@ function escapeHtml(text: string): string {
 
 function transformPlain(text: string): string {
   const replacements = createPinyinReplacements(text);
-  return replacements.reduce((result, { pattern, value }) => 
+  return replacements.reduce((result, { pattern, value }) =>
     result.replace(pattern, value), text
   );
 }
 
 function transformHTML(text: string): string {
   const escapedText = escapeHtml(text);
+  // Preserve line breaks by converting them to <br> tags
+  const textWithLineBreaks = escapedText.replace(/\n/g, "<br>");
   const replacements = createPinyinReplacements(text);
-  return replacements.reduce((result, { pattern, value }) => 
-    result.replace(pattern, `<mark class="hl">${value}</mark>`), escapedText
-  );
+  return replacements.reduce((result, { pattern, value, isOutsideTopK }) => {
+    const className = isOutsideTopK ? "hl-red" : "hl";
+    return result.replace(pattern, `<mark class="${className}">${value}</mark>`);
+  }, textWithLineBreaks);
 }
 
 function updateOutput(): void {

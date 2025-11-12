@@ -91,7 +91,11 @@
     }
     .help { color: var(--muted); font-size: 12px; margin-top: 8px; }
     .hl { background: #fde68a; color: inherit; padding: 0 2px; border-radius: 3px; }
-    @media (prefers-color-scheme: dark) { .hl { background: #7a5d00; } }
+    .hl-red { background: #fecaca; color: inherit; padding: 0 2px; border-radius: 3px; }
+    @media (prefers-color-scheme: dark) {
+      .hl { background: #7a5d00; }
+      .hl-red { background: #7c2d12; }
+    }
     @media (max-width: 860px) { .container { flex-direction: column; } }
   </style>
 </head>
@@ -123,6 +127,13 @@
         </div>
         <p class="help">此窗口仅用于查看与复制，不支持输入或粘贴。</p>
       </div>
+    </div>
+    <div style="margin-top: 24px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: rgba(0, 0, 0, 0.03);">
+      <p style="margin: 0 0 8px; font-weight: 600; font-size: 14px;">颜色说明：</p>
+      <ul style="margin: 0; padding-left: 16px; font-size: 14px; color: var(--muted);">
+        <li style="margin-bottom: 4px;"><mark class="hl">黄色高亮</mark>：替换为常用字（在所选常用字范围内）</li>
+        <li style="margin-bottom: 4px;"><mark class="hl-red">红色高亮</mark>：替换为读音相同但不常用的字，或直接显示拼音</li>
+      </ul>
     </div>
   </main>
   <script type="module" src="/src/main.ts"></script>
