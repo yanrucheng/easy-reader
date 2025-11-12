@@ -1,5 +1,6 @@
 import pinyin from 'pinyin';
-import characterFrequencyData from '../character-frequency.json';
+import characterFrequencyDataRaw from '../character-frequency.json';
+const characterFrequencyData: string[] = characterFrequencyDataRaw;
 
 interface ReplacementConfig {
   pattern: RegExp;
