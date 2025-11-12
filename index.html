@@ -95,9 +95,11 @@
     .help { color: var(--muted); font-size: 12px; margin-top: 8px; }
     .hl { background: #fde68a; color: inherit; padding: 0 2px; border-radius: 3px; }
     .hl-red { background: #fecaca; color: inherit; padding: 0 2px; border-radius: 3px; }
+    .hl-purple { background: #eed2ee; color: inherit; padding: 0 2px; border-radius: 3px; }
     @media (prefers-color-scheme: dark) {
       .hl { background: #7a5d00; }
       .hl-red { background: #7c2d12; }
+      .hl-purple { background: #581c87; }
     }
     @media (max-width: 860px) { .container { flex-direction: column; } }
   </style>
@@ -112,6 +114,12 @@
       </label>
       <input type="range" id="topKSlider" min="100" max="5000" value="2500" step="100" style="width: 100%; max-width: 400px;">
       <p class="help" style="margin-top: 4px;">仅替换前2500个最常用字之外的汉字为常见字</p>
+
+      <div style="margin-top: 12px; display: flex; align-items: center; gap: 8px;">
+        <label for="toneSwitch" style="font-weight: 600; font-size: 14px;">允许不同声调替换</label>
+        <input type="checkbox" id="toneSwitch" checked>
+      </div>
+      <p class="help" style="margin-top: 4px;">如果勾选，当同声调常用字不存在时，将使用不同声调的常用字（紫色标记）</p>
     </div>
     <div class="container">
       <div class="column">
@@ -134,8 +142,9 @@
     <div style="margin-top: 24px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: rgba(0, 0, 0, 0.03);">
       <p style="margin: 0 0 8px; font-weight: 600; font-size: 14px;">颜色说明：</p>
       <ul style="margin: 0; padding-left: 16px; font-size: 14px; color: var(--muted);">
-        <li style="margin-bottom: 4px;"><mark class="hl">黄色高亮</mark>：替换为常用字（在所选常用字范围内）</li>
-        <li style="margin-bottom: 4px;"><mark class="hl-red">红色高亮</mark>：替换为读音相同但不常用的字</li>
+        <li style="margin-bottom: 4px;"><mark class="hl">黄色高亮</mark>：替换为同声调的常用字（在所选常用字范围内）</li>
+        <li style="margin-bottom: 4px;"><mark class="hl-purple">紫色高亮</mark>：替换为不同声调的常用字（在所选常用字范围内）</li>
+        <li style="margin-bottom: 4px;"><mark class="hl-red">红色高亮</mark>：替换为读音相同但不常用的字或无合适替换</li>
       </ul>
     </div>
   </main>

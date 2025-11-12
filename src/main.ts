@@ -8,9 +8,19 @@ interface ReplacementConfig {
   pattern: RegExp;
   value: string;
   isOutsideTopK: boolean;
+  isDifferentTone: boolean; // Indicates if replacement uses a different tone
+}
+
+function getPinyinWithoutTone(char: string): string {
+  const result = pinyin(char, {
+    style: pinyin.STYLE_NORMAL, // This gives pinyin without tone marks
+    heteronym: false
+  });
+  return result[0]?.[0] || char;
 }
 
 let currentTopK = 2500;
+let allowDifferentTones = true; // Default to true as per user request
 const allowedCharacters = new Set<string>();
 let pronunciationMap: Map<string, string[]> = new Map(); // Maps pinyin to array of characters sorted by frequency
 
@@ -44,33 +54,48 @@ function getPinyinWithTone(char: string): string {
   return result[0]?.[0] || char;
 }
 
-function getSamePronunciationReplacement(char: string): { value: string; isOutsideTopK: boolean } {
+function getSamePronunciationReplacement(char: string): { value: string; isOutsideTopK: boolean; isDifferentTone: boolean } {
   const charPinyin = getPinyinWithTone(char);
   const samePronunciationChars = pronunciationMap.get(charPinyin);
 
-  if (!samePronunciationChars) {
-    return { value: char, isOutsideTopK: true };
-  }
-
-  // Find the first character in the same pronunciation list that is allowed
-  const replacementChar = samePronunciationChars.find(c => allowedCharacters.has(c) && c !== char);
-
-  if (replacementChar) {
-    return { value: replacementChar, isOutsideTopK: false };
-  } else {
-    // No replacement in allowed characters, check if there's a better character
-    // The first character in the list is the most frequent one
-    const mostFrequentChar = samePronunciationChars[0];
-
-    // If we found a most frequent character and it's different from original
-    if (mostFrequentChar && mostFrequentChar !== char) {
-      // Replace with the most frequent character (even if it's outside top-K)
-      return { value: mostFrequentChar, isOutsideTopK: true };
+  // Try to find same tone replacement first
+  if (samePronunciationChars) {
+    const replacementChar = samePronunciationChars.find(c => allowedCharacters.has(c) && c !== char);
+    if (replacementChar) {
+      return { value: replacementChar, isOutsideTopK: false, isDifferentTone: false };
     }
-
-    // Original is already the most frequent or no other options
-    return { value: char, isOutsideTopK: true };
   }
+
+  // If same tone replacement not found and different tones are allowed
+  if (allowDifferentTones) {
+    const charPinyinWithoutTone = getPinyinWithoutTone(char);
+
+    // Search all characters with the same pronunciation (ignoring tone)
+    for (const [pinyinWithTone, chars] of pronunciationMap.entries()) {
+      // Get first character and ensure it's valid before getting pinyin without tone
+      const firstChar = chars[0];
+      if (!firstChar) continue;
+      const mapPinyinWithoutTone = getPinyinWithoutTone(firstChar); // All chars in the map entry have same pinyin
+
+      if (mapPinyinWithoutTone === charPinyinWithoutTone && pinyinWithTone !== charPinyin) {
+        const replacementChar = chars.find(c => allowedCharacters.has(c) && c !== char);
+        if (replacementChar) {
+          return { value: replacementChar, isOutsideTopK: false, isDifferentTone: true };
+        }
+      }
+    }
+  }
+
+  // If no replacement found in allowed characters, check same tone outside top-K
+  if (samePronunciationChars) {
+    const mostFrequentChar = samePronunciationChars[0];
+    if (mostFrequentChar && mostFrequentChar !== char) {
+      return { value: mostFrequentChar, isOutsideTopK: true, isDifferentTone: false };
+    }
+  }
+
+  // Original is already the most frequent or no other options
+  return { value: char, isOutsideTopK: true, isDifferentTone: false };
 }
 
 function createPinyinReplacements(text: string): ReplacementConfig[] {
@@ -81,11 +106,12 @@ function createPinyinReplacements(text: string): ReplacementConfig[] {
   return uniqueChars
     .filter(char => !allowedCharacters.has(char))
     .map(char => {
-      const { value, isOutsideTopK } = getSamePronunciationReplacement(char);
+      const { value, isOutsideTopK, isDifferentTone } = getSamePronunciationReplacement(char);
       return {
         pattern: new RegExp(char, 'g'),
         value,
-        isOutsideTopK
+        isOutsideTopK,
+        isDifferentTone
       };
     });
 }
@@ -114,8 +140,11 @@ function transformHTML(text: string): string {
   // Preserve line breaks by converting them to <br> tags
   const textWithLineBreaks = escapedText.replace(/\n/g, "<br>");
   const replacements = createPinyinReplacements(text);
-  return replacements.reduce((result, { pattern, value, isOutsideTopK }) => {
-    const className = isOutsideTopK ? "hl-red" : "hl";
+  return replacements.reduce((result, { pattern, value, isOutsideTopK, isDifferentTone }) => {
+    let className = isOutsideTopK ? "hl-red" : "hl";
+    if (!isOutsideTopK && isDifferentTone) {
+      className = "hl-purple"; // Different tone replacements are purple
+    }
     return result.replace(pattern, `<mark class="${className}">${value}</mark>`);
   }, textWithLineBreaks);
 }
@@ -178,15 +207,27 @@ function handlePaste(event: ClipboardEvent): void {
 function handleTopKChange(event: Event): void {
   const slider = event.target as HTMLInputElement;
   const topKValue = document.getElementById('topKValue');
-  
+
   if (!slider || !topKValue) {
     console.error('Slider or value element not found');
     return;
   }
-  
+
   currentTopK = parseInt(slider.value);
   topKValue.textContent = currentTopK.toString();
   updateAllowedCharacters(currentTopK);
+  updateOutput();
+}
+
+function handleToneSwitchChange(event: Event): void {
+  const switchElement = event.target as HTMLInputElement;
+
+  if (!switchElement) {
+    console.error('Switch element not found');
+    return;
+  }
+
+  allowDifferentTones = switchElement.checked;
   updateOutput();
 }
 
@@ -195,8 +236,9 @@ function initializeApp(): void {
   const outputElement = document.getElementById('output');
   const copyButton = document.getElementById('copyBtn');
   const topKSlider = document.getElementById('topKSlider');
+  const toneSwitch = document.getElementById('toneSwitch');
 
-  if (!inputElement || !outputElement || !copyButton || !topKSlider) {
+  if (!inputElement || !outputElement || !copyButton || !topKSlider || !toneSwitch) {
     console.error('Required elements not found');
     return;
   }
@@ -209,6 +251,7 @@ function initializeApp(): void {
   outputElement.addEventListener('paste', handlePaste);
   copyButton.addEventListener('click', handleOutputCopy);
   topKSlider.addEventListener('input', handleTopKChange);
+  (toneSwitch as HTMLInputElement).addEventListener('change', handleToneSwitchChange);
 
   // Add input copy button listener
   const inputCopyButton = document.getElementById('inputCopyBtn');
