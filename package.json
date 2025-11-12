@@ -20,6 +20,7 @@
     "vite": "^7.2.2"
   },
   "dependencies": {
+    "@types/pinyin": "^2.10.2",
     "pinyin": "^4.0.0"
   }
 }

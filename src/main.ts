@@ -8,6 +8,23 @@ interface ReplacementConfig {
 
 let currentTopK = 2500;
 const allowedCharacters = new Set<string>();
+let pronunciationMap: Map<string, string[]> = new Map(); // Maps pinyin to array of characters sorted by frequency
+
+function initializePronunciationMap(): void {
+  // Clear the map
+  pronunciationMap.clear();
+
+  // Build pronunciation map from character frequency data
+  characterFrequencyData.forEach(char => {
+    const pinyinValue = getPinyinWithTone(char);
+    if (pinyinValue) { // Ensure we have a valid pinyin
+      if (!pronunciationMap.has(pinyinValue)) {
+        pronunciationMap.set(pinyinValue, []);
+      }
+      pronunciationMap.get(pinyinValue)?.push(char);
+    }
+  });
+}
 
 function updateAllowedCharacters(topK: number): void {
   allowedCharacters.clear();
@@ -23,16 +40,30 @@ function getPinyinWithTone(char: string): string {
   return result[0]?.[0] || char;
 }
 
+function getSamePronunciationReplacement(char: string): string {
+  const charPinyin = getPinyinWithTone(char);
+  const samePronunciationChars = pronunciationMap.get(charPinyin);
+
+  if (!samePronunciationChars) {
+    return getPinyinWithTone(char);
+  }
+
+  // Find the first character in the same pronunciation list that is allowed
+  const replacementChar = samePronunciationChars.find(c => allowedCharacters.has(c) && c !== char);
+
+  return replacementChar || getPinyinWithTone(char);
+}
+
 function createPinyinReplacements(text: string): ReplacementConfig[] {
   const chineseCharRegex = /[\u4e00-\u9fff]/g;
   const matches = text.match(chineseCharRegex) || [];
   const uniqueChars = [...new Set(matches)];
-  
+
   return uniqueChars
     .filter(char => !allowedCharacters.has(char))
     .map(char => ({
       pattern: new RegExp(char, 'g'),
-      value: getPinyinWithTone(char)
+      value: getSamePronunciationReplacement(char)
     }));
 }
 
@@ -133,20 +164,21 @@ function initializeApp(): void {
   const outputElement = document.getElementById('output');
   const copyButton = document.getElementById('copyBtn');
   const topKSlider = document.getElementById('topKSlider');
-  
+
   if (!inputElement || !outputElement || !copyButton || !topKSlider) {
     console.error('Required elements not found');
     return;
   }
-  
-  // Initialize allowed characters with default top-k value
+
+  // Initialize pronunciation map and allowed characters
+  initializePronunciationMap();
   updateAllowedCharacters(currentTopK);
-  
+
   inputElement.addEventListener('input', updateOutput);
   outputElement.addEventListener('paste', handlePaste);
   copyButton.addEventListener('click', handleCopy);
   topKSlider.addEventListener('input', handleTopKChange);
-  
+
   updateOutput();
 }
 
