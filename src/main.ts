@@ -1,8 +1,18 @@
 import pinyin from 'pinyin';
+import characterFrequencyData from '../character-frequency.json';
 
 interface ReplacementConfig {
   pattern: RegExp;
   value: string;
+}
+
+let currentTopK = 2500;
+const allowedCharacters = new Set<string>();
+
+function updateAllowedCharacters(topK: number): void {
+  allowedCharacters.clear();
+  const topCharacters = characterFrequencyData.slice(0, topK);
+  topCharacters.forEach(char => allowedCharacters.add(char));
 }
 
 function getPinyinWithTone(char: string): string {
@@ -18,10 +28,12 @@ function createPinyinReplacements(text: string): ReplacementConfig[] {
   const matches = text.match(chineseCharRegex) || [];
   const uniqueChars = [...new Set(matches)];
   
-  return uniqueChars.map(char => ({
-    pattern: new RegExp(char, 'g'),
-    value: getPinyinWithTone(char)
-  }));
+  return uniqueChars
+    .filter(char => !allowedCharacters.has(char))
+    .map(char => ({
+      pattern: new RegExp(char, 'g'),
+      value: getPinyinWithTone(char)
+    }));
 }
 
 function escapeHtml(text: string): string {
@@ -101,19 +113,39 @@ function handlePaste(event: ClipboardEvent): void {
   event.preventDefault();
 }
 
+function handleTopKChange(event: Event): void {
+  const slider = event.target as HTMLInputElement;
+  const topKValue = document.getElementById('topKValue');
+  
+  if (!slider || !topKValue) {
+    console.error('Slider or value element not found');
+    return;
+  }
+  
+  currentTopK = parseInt(slider.value);
+  topKValue.textContent = currentTopK.toString();
+  updateAllowedCharacters(currentTopK);
+  updateOutput();
+}
+
 function initializeApp(): void {
   const inputElement = document.getElementById('input');
   const outputElement = document.getElementById('output');
   const copyButton = document.getElementById('copyBtn');
+  const topKSlider = document.getElementById('topKSlider');
   
-  if (!inputElement || !outputElement || !copyButton) {
+  if (!inputElement || !outputElement || !copyButton || !topKSlider) {
     console.error('Required elements not found');
     return;
   }
   
+  // Initialize allowed characters with default top-k value
+  updateAllowedCharacters(currentTopK);
+  
   inputElement.addEventListener('input', updateOutput);
   outputElement.addEventListener('paste', handlePaste);
   copyButton.addEventListener('click', handleCopy);
+  topKSlider.addEventListener('input', handleTopKChange);
   
   updateOutput();
 }

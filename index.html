@@ -84,6 +84,13 @@
   <main>
     <h1>易读器</h1>
     <p class="subtitle">将罕见汉字替换为读音，便于朗读与理解。</p>
+    <div style="margin-bottom: 16px;">
+      <label for="topKSlider" style="display: block; margin-bottom: 8px; font-weight: 600;">
+        常用字范围: <span id="topKValue">2500</span> 字
+      </label>
+      <input type="range" id="topKSlider" min="100" max="5000" value="2500" step="100" style="width: 100%; max-width: 400px;">
+      <p class="help" style="margin-top: 4px;">仅替换前2500个最常用字之外的汉字为拼音</p>
+    </div>
     <div class="container">
       <div class="column">
         <label for="input">原文输入</label>
