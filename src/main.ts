@@ -201,8 +201,13 @@ function transformHTML(text: string): string {
       } else {
         // Check if it has multiple pronunciations and we should highlight it
         if (highlightMultiPronunciation && hasMultiplePronunciations(char)) {
-          // Mark as green
-          result += `<mark class="hl-green">${char}</mark>`;
+          // Check if character is in top 300 most frequent
+          const charIndex = characterFrequencyData.indexOf(char);
+          const isTop300 = charIndex >= 0 && charIndex < 300;
+
+          // Mark as light green if top 300, otherwise regular green
+          const highlightClass = isTop300 ? "hl-lightgreen" : "hl-green";
+          result += `<mark class="${highlightClass}">${char}</mark>`;
         } else {
           // Keep as is
           result += char;

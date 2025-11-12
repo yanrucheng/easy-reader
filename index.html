@@ -101,11 +101,13 @@
     .hl-red { background: #fecaca; color: inherit; padding: 0 2px; border-radius: 3px; }
     .hl-purple { background: #eed2ee; color: inherit; padding: 0 2px; border-radius: 3px; }
     .hl-green { background: #bbf7d0; color: inherit; padding: 0 2px; border-radius: 3px; }
+    .hl-lightgreen { background: #d1fae5; color: inherit; padding: 0 2px; border-radius: 3px; }
     @media (prefers-color-scheme: dark) {
       .hl { background: #7a5d00; }
       .hl-red { background: #7c2d12; }
       .hl-purple { background: #581c87; }
       .hl-green { background: #15803d; }
+      .hl-lightgreen { background: #22543d; }
     }
     @media (max-width: 860px) { .container { flex-direction: column; } }
   </style>
@@ -157,6 +159,7 @@
         <li style="margin-bottom: 4px;"><mark class="hl">黄色高亮</mark>：替换为同声调的常用字（在所选常用字范围内）</li>
         <li style="margin-bottom: 4px;"><mark class="hl-purple">紫色高亮</mark>：替换为不同声调的常用字（在所选常用字范围内）</li>
         <li style="margin-bottom: 4px;"><mark class="hl-red">红色高亮</mark>：替换为读音相同但不常用的字或无合适替换</li>
+        <li style="margin-bottom: 4px;"><mark class="hl-lightgreen">浅绿色高亮</mark>：表示该常用汉字（前300字）有多种读音（多音字）</li>
         <li style="margin-bottom: 4px;"><mark class="hl-green">绿色高亮</mark>：表示该汉字有多种读音（多音字）</li>
       </ul>
     </div>
