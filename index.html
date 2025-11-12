@@ -100,10 +100,12 @@
     .hl { background: #fde68a; color: inherit; padding: 0 2px; border-radius: 3px; }
     .hl-red { background: #fecaca; color: inherit; padding: 0 2px; border-radius: 3px; }
     .hl-purple { background: #eed2ee; color: inherit; padding: 0 2px; border-radius: 3px; }
+    .hl-green { background: #bbf7d0; color: inherit; padding: 0 2px; border-radius: 3px; }
     @media (prefers-color-scheme: dark) {
       .hl { background: #7a5d00; }
       .hl-red { background: #7c2d12; }
       .hl-purple { background: #581c87; }
+      .hl-green { background: #15803d; }
     }
     @media (max-width: 860px) { .container { flex-direction: column; } }
   </style>
@@ -124,6 +126,12 @@
         <input type="checkbox" id="toneSwitch" checked>
       </div>
       <p class="help" style="margin-top: 4px;">如果勾选，当同声调常用字不存在时，将使用不同声调的常用字（紫色标记）</p>
+
+      <div style="margin-top: 12px; display: flex; align-items: center; gap: 8px;">
+        <label for="highlightMultiPronunciation" style="font-weight: 600; font-size: 14px;">标记多音字为绿色</label>
+        <input type="checkbox" id="highlightMultiPronunciation">
+      </div>
+      <p class="help" style="margin-top: 4px;">如果勾选，将把有多种读音的汉字标记为绿色，便于识别多音字</p>
     </div>
     <div class="container">
       <div class="column">
@@ -149,6 +157,7 @@
         <li style="margin-bottom: 4px;"><mark class="hl">黄色高亮</mark>：替换为同声调的常用字（在所选常用字范围内）</li>
         <li style="margin-bottom: 4px;"><mark class="hl-purple">紫色高亮</mark>：替换为不同声调的常用字（在所选常用字范围内）</li>
         <li style="margin-bottom: 4px;"><mark class="hl-red">红色高亮</mark>：替换为读音相同但不常用的字或无合适替换</li>
+        <li style="margin-bottom: 4px;"><mark class="hl-green">绿色高亮</mark>：表示该汉字有多种读音（多音字）</li>
       </ul>
     </div>
   </main>

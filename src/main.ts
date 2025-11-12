@@ -30,6 +30,7 @@ function hasMultiplePronunciations(char: string): boolean {
 
 let currentTopK = 2500;
 let allowDifferentTones = true; // Default to true as per user request
+let highlightMultiPronunciation = false; // Default to false as per user request
 const allowedCharacters = new Set<string>();
 let pronunciationMap: Map<string, string[]> = new Map(); // Maps pinyin to array of characters sorted by frequency
 
@@ -160,14 +161,62 @@ function transformHTML(text: string): string {
   const escapedText = escapeHtml(text);
   // Preserve line breaks by converting them to <br> tags
   const textWithLineBreaks = escapedText.replace(/\n/g, "<br>");
+
+  // Get all replacements first
   const replacements = createPinyinReplacements(text);
-  return replacements.reduce((result, { pattern, value, isOutsideTopK, isDifferentTone }) => {
+  const replacementMap = new Map<string, { value: string; className: string }>();
+
+  // Build replacement map
+  replacements.forEach(({ pattern, value, isOutsideTopK, isDifferentTone }) => {
     let className = isOutsideTopK ? "hl-red" : "hl";
     if (!isOutsideTopK && isDifferentTone) {
       className = "hl-purple"; // Different tone replacements are purple
     }
-    return result.replace(pattern, `<mark class="${className}">${value}</mark>`);
-  }, textWithLineBreaks);
+    // Extract the character from the regex pattern
+    const char = pattern.source;
+    replacementMap.set(char, { value, className });
+  });
+
+  // Now process each character individually to handle multi-pronunciation highlighting
+  let result = "";
+  let i = 0;
+
+  while (i < textWithLineBreaks.length) {
+    // Check if current character is a line break tag
+    if (textWithLineBreaks.substr(i, 4) === "<br>") {
+      result += "<br>";
+      i += 4;
+      continue;
+    }
+
+    const char = textWithLineBreaks[i] as string;
+
+    // Check if it's a Chinese character
+    if (/[\u4e00-\u9fff]/.test(char)) {
+      // Check if we need to replace it
+      if (replacementMap.has(char)) {
+        // Use replacement with appropriate highlight
+        const { value, className } = replacementMap.get(char)!;
+        result += `<mark class="${className}">${value}</mark>`;
+      } else {
+        // Check if it has multiple pronunciations and we should highlight it
+        if (highlightMultiPronunciation && hasMultiplePronunciations(char)) {
+          // Mark as green
+          result += `<mark class="hl-green">${char}</mark>`;
+        } else {
+          // Keep as is
+          result += char;
+        }
+      }
+    } else {
+      // Non-Chinese character, keep as is
+      result += char;
+    }
+
+    i++;
+  }
+
+  return result;
 }
 
 function updateOutput(): void {
@@ -252,14 +301,27 @@ function handleToneSwitchChange(event: Event): void {
   updateOutput();
 }
 
+function handleMultiPronunciationSwitchChange(event: Event): void {
+  const switchElement = event.target as HTMLInputElement;
+
+  if (!switchElement) {
+    console.error('Switch element not found');
+    return;
+  }
+
+  highlightMultiPronunciation = switchElement.checked;
+  updateOutput();
+}
+
 function initializeApp(): void {
   const inputElement = document.getElementById('input');
   const outputElement = document.getElementById('output');
   const copyButton = document.getElementById('copyBtn');
   const topKSlider = document.getElementById('topKSlider');
   const toneSwitch = document.getElementById('toneSwitch');
+  const multiPronunciationSwitch = document.getElementById('highlightMultiPronunciation');
 
-  if (!inputElement || !outputElement || !copyButton || !topKSlider || !toneSwitch) {
+  if (!inputElement || !outputElement || !copyButton || !topKSlider || !toneSwitch || !multiPronunciationSwitch) {
     console.error('Required elements not found');
     return;
   }
@@ -268,11 +330,15 @@ function initializeApp(): void {
   initializePronunciationMap();
   updateAllowedCharacters(currentTopK);
 
+  // Initialize switch state
+  highlightMultiPronunciation = (multiPronunciationSwitch as HTMLInputElement).checked;
+
   inputElement.addEventListener('input', updateOutput);
   outputElement.addEventListener('paste', handlePaste);
   copyButton.addEventListener('click', handleOutputCopy);
   topKSlider.addEventListener('input', handleTopKChange);
   (toneSwitch as HTMLInputElement).addEventListener('change', handleToneSwitchChange);
+  (multiPronunciationSwitch as HTMLInputElement).addEventListener('change', handleMultiPronunciationSwitchChange);
 
   // Add input copy button listener
   const inputCopyButton = document.getElementById('inputCopyBtn');
