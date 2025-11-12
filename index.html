@@ -37,18 +37,25 @@
     label { font-weight: 600; margin-bottom: 8px; }
     .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
     .copy-btn {
-      padding: 6px 10px;
+      padding: 4px 8px;
       border: 1px solid var(--border);
-      background: transparent;
-      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.05);
+      backdrop-filter: blur(4px);
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 12px;
       color: inherit;
       position: absolute;
       top: 12px;
       right: 12px;
+      z-index: 10;
+      opacity: 0.8;
     }
-    .copy-btn:hover { filter: brightness(0.95); }
+
+    .copy-btn:hover {
+      opacity: 1;
+      filter: brightness(1.05);
+    }
     textarea {
       flex: 1;
       width: 100%;
@@ -78,6 +85,10 @@
       word-break: break-word;
       position: relative;
     }
+
+    .output-content {
+      padding: 36px 12px 12px 12px;
+    }
     .help { color: var(--muted); font-size: 12px; margin-top: 8px; }
     .hl { background: #fde68a; color: inherit; padding: 0 2px; border-radius: 3px; }
     @media (prefers-color-scheme: dark) { .hl { background: #7a5d00; } }
@@ -104,8 +115,8 @@
       <div class="column">
         <label for="output">易读转换（仅查看与复制）</label>
         <div id="output" class="output" aria-label="易读转换结果" tabindex="0">
-          <button id="copyBtn" class="copy-btn" type="button">复制</button>
           <div id="outputContent" class="output-content"></div>
+          <button id="copyBtn" class="copy-btn" type="button">复制</button>
         </div>
         <p class="help">此窗口仅用于查看与复制，不支持输入或粘贴。</p>
       </div>
