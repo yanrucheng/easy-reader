@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>易读器</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #ffffff;
+      --fg: #111111;
+      --border: #e5e7eb;
+      --muted: #6b7280;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b0e13;
+        --fg: #e5e7eb;
+        --border: #202633;
+        --muted: #9aa3b2;
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      padding: 24px;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    main { max-width: 1100px; margin: 0 auto; }
+    h1 { font-size: 24px; margin: 0 0 6px; }
+    .subtitle { color: var(--muted); margin: 0 0 20px; font-size: 14px; }
+    .container { display: flex; gap: 16px; align-items: stretch; }
+    .column { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    label { font-weight: 600; margin-bottom: 8px; }
+    .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .copy-btn {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      background: transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: inherit;
+    }
+    .copy-btn:hover { filter: brightness(0.95); }
+    textarea {
+      flex: 1;
+      width: 100%;
+      min-height: 320px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: transparent;
+      color: inherit;
+      line-height: 1.7;
+      font-size: 16px;
+      resize: vertical;
+    }
+    textarea[readonly] { background: transparent; }
+    .output {
+      flex: 1;
+      width: 100%;
+      min-height: 320px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: transparent;
+      color: inherit;
+      line-height: 1.7;
+      font-size: 16px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .help { color: var(--muted); font-size: 12px; margin-top: 8px; }
+    .hl { background: #fde68a; color: inherit; padding: 0 2px; border-radius: 3px; }
+    @media (prefers-color-scheme: dark) { .hl { background: #7a5d00; } }
+    @media (max-width: 860px) { .container { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>易读器</h1>
+    <p class="subtitle">将罕见汉字替换为读音，便于朗读与理解。</p>
+    <div class="container">
+      <div class="column">
+        <label for="input">原文输入</label>
+        <textarea id="input" placeholder="在此粘贴或输入文本…"></textarea>
+      </div>
+      <div class="column">
+        <div class="toolbar">
+          <label for="output">标注读音（仅查看与复制）</label>
+          <button id="copyBtn" class="copy-btn" type="button">复制</button>
+        </div>
+        <div id="output" class="output" aria-label="标注读音结果" tabindex="0"></div>
+        <p class="help">此窗口仅用于查看与复制，不支持输入或粘贴。</p>
+      </div>
+    </div>
+  </main>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
