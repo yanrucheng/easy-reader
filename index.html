@@ -44,6 +44,9 @@
       cursor: pointer;
       font-size: 13px;
       color: inherit;
+      position: absolute;
+      top: 12px;
+      right: 12px;
     }
     .copy-btn:hover { filter: brightness(0.95); }
     textarea {
@@ -73,6 +76,7 @@
       font-size: 16px;
       white-space: pre-wrap;
       word-break: break-word;
+      position: relative;
     }
     .help { color: var(--muted); font-size: 12px; margin-top: 8px; }
     .hl { background: #fde68a; color: inherit; padding: 0 2px; border-radius: 3px; }
@@ -98,11 +102,11 @@
         <p class="help">在此粘贴或输入文本，系统将自动转换为易读格式。</p>
       </div>
       <div class="column">
-        <div class="toolbar">
-          <label for="output">易读转换（仅查看与复制）</label>
+        <label for="output">易读转换（仅查看与复制）</label>
+        <div id="output" class="output" aria-label="易读转换结果" tabindex="0">
           <button id="copyBtn" class="copy-btn" type="button">复制</button>
+          <div id="outputContent" class="output-content"></div>
         </div>
-        <div id="output" class="output" aria-label="易读转换结果" tabindex="0"></div>
         <p class="help">此窗口仅用于查看与复制，不支持输入或粘贴。</p>
       </div>
     </div>

@@ -99,14 +99,14 @@ function transformHTML(text: string): string {
 
 function updateOutput(): void {
   const inputElement = document.getElementById('input') as HTMLTextAreaElement | null;
-  const outputElement = document.getElementById('output') as HTMLDivElement | null;
-  
-  if (!inputElement || !outputElement) {
+  const outputContentElement = document.getElementById('outputContent') as HTMLDivElement | null;
+
+  if (!inputElement || !outputContentElement) {
     console.error('Required elements not found');
     return;
   }
-  
-  outputElement.innerHTML = transformHTML(inputElement.value);
+
+  outputContentElement.innerHTML = transformHTML(inputElement.value);
 }
 
 function handleCopy(): void {
@@ -131,10 +131,10 @@ function handleCopy(): void {
     .catch(() => {
       const selection = window.getSelection();
       const range = document.createRange();
-      const outputElement = document.getElementById('output');
-      
-      if (outputElement && selection) {
-        range.selectNodeContents(outputElement);
+      const outputContentElement = document.getElementById('outputContent');
+
+      if (outputContentElement && selection) {
+        range.selectNodeContents(outputContentElement);
         selection.removeAllRanges();
         selection.addRange(range);
         document.execCommand('copy');
