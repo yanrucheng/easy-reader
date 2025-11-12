@@ -19,6 +19,15 @@ function getPinyinWithoutTone(char: string): string {
   return result[0]?.[0] || char;
 }
 
+function hasMultiplePronunciations(char: string): boolean {
+  const result = pinyin(char, {
+    style: pinyin.STYLE_TONE2, // We need tone2 style to be consistent with the rest of the code
+    heteronym: true
+  });
+  // Check if we got multiple pronunciations
+  return (result[0]?.length || 0) > 1;
+}
+
 let currentTopK = 2500;
 let allowDifferentTones = true; // Default to true as per user request
 const allowedCharacters = new Set<string>();
@@ -60,7 +69,11 @@ function getSamePronunciationReplacement(char: string): { value: string; isOutsi
 
   // Try to find same tone replacement first
   if (samePronunciationChars) {
-    const replacementChar = samePronunciationChars.find(c => allowedCharacters.has(c) && c !== char);
+    const replacementChar = samePronunciationChars.find(c =>
+      allowedCharacters.has(c) &&
+      c !== char &&
+      !hasMultiplePronunciations(c) // Avoid ambiguous characters
+    );
     if (replacementChar) {
       return { value: replacementChar, isOutsideTopK: false, isDifferentTone: false };
     }
@@ -78,7 +91,11 @@ function getSamePronunciationReplacement(char: string): { value: string; isOutsi
       const mapPinyinWithoutTone = getPinyinWithoutTone(firstChar); // All chars in the map entry have same pinyin
 
       if (mapPinyinWithoutTone === charPinyinWithoutTone && pinyinWithTone !== charPinyin) {
-        const replacementChar = chars.find(c => allowedCharacters.has(c) && c !== char);
+        const replacementChar = chars.find(c =>
+          allowedCharacters.has(c) &&
+          c !== char &&
+          !hasMultiplePronunciations(c) // Avoid ambiguous characters
+        );
         if (replacementChar) {
           return { value: replacementChar, isOutsideTopK: false, isDifferentTone: true };
         }
@@ -88,8 +105,12 @@ function getSamePronunciationReplacement(char: string): { value: string; isOutsi
 
   // If no replacement found in allowed characters, check same tone outside top-K
   if (samePronunciationChars) {
-    const mostFrequentChar = samePronunciationChars[0];
-    if (mostFrequentChar && mostFrequentChar !== char) {
+    // Find the most frequent character that is not the original and not ambiguous
+    const mostFrequentChar = samePronunciationChars.find(c =>
+      c !== char &&
+      !hasMultiplePronunciations(c) // Avoid ambiguous characters
+    );
+    if (mostFrequentChar) {
       return { value: mostFrequentChar, isOutsideTopK: true, isDifferentTone: false };
     }
   }
