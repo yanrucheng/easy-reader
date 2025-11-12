@@ -70,24 +70,24 @@
       resize: vertical;
     }
     textarea[readonly] { background: transparent; }
+    .input-container,
     .output {
       flex: 1;
       width: 100%;
       min-height: 320px;
-      padding: 12px 14px;
+      padding: 0;
       border: 1px solid var(--border);
       border-radius: 10px;
       background: transparent;
-      color: inherit;
-      line-height: 1.7;
-      font-size: 16px;
-      white-space: pre-wrap;
-      word-break: break-word;
       position: relative;
     }
 
     .output-content {
-      padding: 36px 12px 12px 12px;
+      padding: 28px 12px 12px 12px;
+    }
+
+    #input {
+      padding: 28px 12px 12px 12px;
     }
     .help { color: var(--muted); font-size: 12px; margin-top: 8px; }
     .hl { background: #fde68a; color: inherit; padding: 0 2px; border-radius: 3px; }
@@ -109,7 +109,10 @@
     <div class="container">
       <div class="column">
         <label for="input">原文输入</label>
-        <textarea id="input" placeholder="在此粘贴或输入文本…"></textarea>
+        <div id="inputContainer" class="input-container">
+          <textarea id="input" placeholder="在此粘贴或输入文本…"></textarea>
+          <button id="inputCopyBtn" class="copy-btn input-copy-btn" type="button">复制</button>
+        </div>
         <p class="help">在此粘贴或输入文本，系统将自动转换为易读格式。</p>
       </div>
       <div class="column">

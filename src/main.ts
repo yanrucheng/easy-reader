@@ -109,17 +109,16 @@ function updateOutput(): void {
   outputContentElement.innerHTML = transformHTML(inputElement.value);
 }
 
-function handleCopy(): void {
-  const inputElement = document.getElementById('input') as HTMLTextAreaElement | null;
-  const copyButton = document.getElementById('copyBtn') as HTMLButtonElement | null;
-  
-  if (!inputElement || !copyButton) {
-    console.error('Required elements not found');
+function handleCopy(buttonId: string, getTextToCopy: () => string): void {
+  const copyButton = document.getElementById(buttonId) as HTMLButtonElement | null;
+
+  if (!copyButton) {
+    console.error('Copy button not found');
     return;
   }
-  
-  const textToCopy = transformPlain(inputElement.value);
-  
+
+  const textToCopy = getTextToCopy();
+
   navigator.clipboard.writeText(textToCopy)
     .then(() => {
       const originalText = copyButton.textContent;
@@ -129,18 +128,24 @@ function handleCopy(): void {
       }, 1500);
     })
     .catch(() => {
-      const selection = window.getSelection();
-      const range = document.createRange();
-      const outputContentElement = document.getElementById('outputContent');
-
-      if (outputContentElement && selection) {
-        range.selectNodeContents(outputContentElement);
-        selection.removeAllRanges();
-        selection.addRange(range);
-        document.execCommand('copy');
-        selection.removeAllRanges();
-      }
+      console.error('Clipboard copy failed');
     });
+}
+
+// Output copy handler
+function handleOutputCopy(): void {
+  const inputElement = document.getElementById('input') as HTMLTextAreaElement | null;
+  if (!inputElement) return;
+
+  handleCopy('copyBtn', () => transformPlain(inputElement.value));
+}
+
+// Input copy handler
+function handleInputCopy(): void {
+  const inputElement = document.getElementById('input') as HTMLTextAreaElement | null;
+  if (!inputElement) return;
+
+  handleCopy('inputCopyBtn', () => inputElement.value);
 }
 
 function handlePaste(event: ClipboardEvent): void {
@@ -179,8 +184,14 @@ function initializeApp(): void {
 
   inputElement.addEventListener('input', updateOutput);
   outputElement.addEventListener('paste', handlePaste);
-  copyButton.addEventListener('click', handleCopy);
+  copyButton.addEventListener('click', handleOutputCopy);
   topKSlider.addEventListener('input', handleTopKChange);
+
+  // Add input copy button listener
+  const inputCopyButton = document.getElementById('inputCopyBtn');
+  if (inputCopyButton) {
+    inputCopyButton.addEventListener('click', handleInputCopy);
+  }
 
   updateOutput();
 }
