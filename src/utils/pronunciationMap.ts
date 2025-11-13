@@ -1,5 +1,5 @@
 import characterFrequencyDataRaw from '../../character-frequency.json';
-import { getPinyinWithTone, getPinyinWithoutTone } from './pinyin';
+import { getPinyinWithTone, getPinyinWithoutTone, hasMultiplePronunciations } from './pinyin';
 
 const characterFrequencyData: string[] = (characterFrequencyDataRaw as (string | null)[]).filter(
   (char): char is string => char !== null && char !== undefined && char !== ''
@@ -31,14 +31,14 @@ export function initializePronunciationMap(): void {
  */
 export function getAlternativeCharactersForPronunciation(
   pronunciation: string,
-  excludeChar: string,
   maxResults: number = 2
 ): string[] {
   // Get all characters with the exact same pronunciation (including tone)
   const sameToneChars = pronunciationMap.get(pronunciation) || [];
 
+  // Filter for single-pronunciation characters
   return sameToneChars.filter(char =>
-    char !== excludeChar
+    !hasMultiplePronunciations(char, false)
   ).slice(0, maxResults);
 }
 
@@ -48,20 +48,26 @@ export function getAlternativeCharactersForPronunciation(
 export function getAlternativeCharactersForPronunciationWithoutTone(
   basePronunciation: string,
   excludeChar: string,
+  originalPronunciation: string, // Added parameter to exclude exact same pronunciation
   maxResults: number = 2
 ): string[] {
   const alternatives: string[] = [];
 
   // Search all characters with the same base pronunciation (ignoring tone)
-  for (const [, chars] of pronunciationMap.entries()) {
+  for (const [pronunciationKey, chars] of pronunciationMap.entries()) {
     const firstChar = chars[0];
     if (!firstChar) continue;
+
+    // Skip the exact same pronunciation (including tone)
+    if (pronunciationKey === originalPronunciation) {
+      continue;
+    }
 
     const mapBasePronunciation = getPinyinWithoutTone(firstChar);
     if (mapBasePronunciation === basePronunciation) {
       // Find the first suitable character for this tone variation
       const alternative = chars.find(char =>
-        char !== excludeChar
+        char !== excludeChar && !hasMultiplePronunciations(char, false)
       );
 
       if (alternative && !alternatives.includes(alternative)) {
@@ -85,11 +91,17 @@ export function getAlternativeCharactersByPronunciation(
 ): { sameTone: string[]; differentTone: string[] } {
   const basePronunciation = pronunciation.replace(/\d$/, '');
 
-  // Get alternatives with the exact same tone
-  const sameTone = getAlternativeCharactersForPronunciation(pronunciation, excludeChar);
+  // Get same tone candidates - now returning max 1
+  const sameTone = getAlternativeCharactersForPronunciation(pronunciation, 1);
 
-  // Get alternatives with different tones (same base pronunciation)
-  const differentTone = getAlternativeCharactersForPronunciationWithoutTone(basePronunciation, excludeChar);
+  // Get ignoring tone candidates - return max 1, excluding same candidates
+  let differentTone = getAlternativeCharactersForPronunciationWithoutTone(basePronunciation, excludeChar, pronunciation, 10);
+
+  // Filter out any candidates that are already in sameTone
+  differentTone = differentTone.filter(candidate => !sameTone.includes(candidate));
+
+  // Take only the first one
+  differentTone = differentTone.slice(0, 1);
 
   return { sameTone, differentTone };
 }
