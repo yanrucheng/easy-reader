@@ -1,5 +1,5 @@
 import { initializePronunciationMap } from './utils/pronunciationMap';
-import { transformPlain, transformHTML } from './utils/transformer';
+import { transformHTML } from './utils/transformer';
 import { handleCopy } from './utils/copyUtils';
 import { initializeHoverMenu } from './utils/hoverMenu';
 import './styles.css';
@@ -8,7 +8,11 @@ import characterFrequencyDataRaw from '../character-frequency.json';
 let currentTopK = 2500;
 let allowDifferentTones = true; // Default to true (music mode enabled)
 let highlightMultiPronunciation = false; // Default to false as per user request
+let outputModifiedByUser = false; // Track if output has been manually modified
 const allowedCharacters = new Set<string>();
+
+// Make outputModifiedByUser available globally for hoverMenu.ts
+(window as any).outputModifiedByUser = outputModifiedByUser;
 
 function updateAllowedCharacters(topK: number): void {
   allowedCharacters.clear();
@@ -28,6 +32,17 @@ function updateOutput(): void {
     return;
   }
 
+  // Check if output was modified by user and confirm before overwriting
+  if (outputModifiedByUser) {
+    const confirmOverwrite = confirm('输出内容已被修改。继续将覆盖现有更改，是否确认？');
+    if (!confirmOverwrite) {
+      return;
+    }
+    // Reset modification flag after user confirms
+    outputModifiedByUser = false;
+    (window as any).outputModifiedByUser = outputModifiedByUser;
+  }
+
   outputContentElement.innerHTML = transformHTML(
     inputElement.value,
     allowedCharacters,
@@ -38,14 +53,13 @@ function updateOutput(): void {
 
 // Output copy handler
 function handleOutputCopy(): void {
-  const inputElement = document.getElementById('input') as HTMLTextAreaElement | null;
-  if (!inputElement) return;
+  const outputContentElement = document.getElementById('outputContent') as HTMLDivElement | null;
+  if (!outputContentElement) return;
 
-  handleCopy('copyBtn', () => transformPlain(
-    inputElement.value,
-    allowedCharacters,
-    allowDifferentTones
-  ));
+  // Get the text content from the output div, preserving line breaks
+  const textToCopy = outputContentElement.innerText;
+
+  handleCopy('copyBtn', () => textToCopy);
 }
 
 // Input copy handler

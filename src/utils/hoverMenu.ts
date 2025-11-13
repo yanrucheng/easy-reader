@@ -1,4 +1,6 @@
 export function initializeHoverMenu(): void {
+  // Access the global outputModifiedByUser flag from main.ts
+  const global = window as any;
   const outputContent = document.getElementById('outputContent');
 
   // Create the menu element
@@ -39,6 +41,9 @@ export function initializeHoverMenu(): void {
         currentTarget.textContent = replacementChar;
         // Update the data attribute to reflect the new character
         currentTarget.setAttribute('data-char', replacementChar);
+
+        // Mark output as modified by user
+        global.outputModifiedByUser = true;
       }
       hideMenu(menu);
     }
