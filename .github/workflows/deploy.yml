@@ -34,10 +34,11 @@ jobs:
     - name: Build
       run: npm run build
 
+    - name: Enable Pages
+      uses: actions/enable-pages@v3
+
     - name: Setup Pages
       uses: actions/configure-pages@v4
-      with:
-        enablement: true
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
