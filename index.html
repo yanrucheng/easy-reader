@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>易读器</title>
+  <script type="module" crossorigin src="/easy-reader/assets/index-CeTzl6ZO.js"></script>
+  <link rel="stylesheet" crossorigin href="/easy-reader/assets/index-Dmx8Ub2n.css">
+</head>
+<body>
+  <main>
+    <h1>易读器</h1>
+    <p class="subtitle">将罕见汉字替换为读音，便于朗读与理解。</p>
+    <div style="margin-bottom: 16px;">
+      <label for="topKSlider" style="display: block; margin-bottom: 8px; font-weight: 600;">
+        常用字范围: <span id="topKValue">2500</span> 字
+      </label>
+      <input type="range" id="topKSlider" min="100" max="5000" value="2500" step="100" style="width: 100%; max-width: 400px;">
+      <p class="help" style="margin-top: 4px;">仅替换前2500个最常用字之外的汉字为常见字</p>
+
+      <div style="margin-top: 12px; display: flex; align-items: center; gap: 8px;">
+        <label for="toneSwitch" style="font-weight: 600; font-size: 14px;">音乐模式(忽略歌词声调)</label>
+        <input type="checkbox" id="toneSwitch" checked>
+      </div>
+      <p class="help" style="margin-top: 4px;">如果勾选，将忽略声调差异，仅根据拼音字母判定多音字（用于歌词等场景）</p>
+
+      <div style="margin-top: 12px; display: flex; align-items: center; gap: 8px;">
+        <label for="highlightMultiPronunciation" style="font-weight: 600; font-size: 14px;">标记多音字为绿色</label>
+        <input type="checkbox" id="highlightMultiPronunciation">
+      </div>
+      <p class="help" style="margin-top: 4px;">如果勾选，将把有多种读音的汉字标记为绿色，便于识别多音字</p>
+    </div>
+    <div class="container">
+      <div class="column">
+        <label for="input">原文输入</label>
+        <div id="inputContainer" class="input-container">
+          <textarea id="input" placeholder="在此粘贴或输入文本…"></textarea>
+          <button id="inputCopyBtn" class="copy-btn input-copy-btn" type="button">复制</button>
+        </div>
+        <p class="help">在此粘贴或输入文本，系统将自动转换为易读格式。</p>
+      </div>
+      <div class="column">
+        <label for="output">易读转换（支持查看、复制和编辑）</label>
+        <div id="output" class="output" aria-label="易读转换结果" tabindex="0">
+          <div id="outputContent" class="output-content" contenteditable="true"></div>
+          <button id="copyBtn" class="copy-btn" type="button">复制</button>
+        </div>
+        <p class="help">此窗口支持查看、复制和编辑。</p>
+      </div>
+    </div>
+    <div style="margin-top: 24px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: rgba(0, 0, 0, 0.03);">
+      <p style="margin: 0 0 8px; font-weight: 600; font-size: 14px;">颜色说明：</p>
+      <ul style="margin: 0; padding-left: 16px; font-size: 14px; color: var(--muted);">
+        <li style="margin-bottom: 4px;"><mark class="hl">黄色高亮</mark>：替换为同声调的常用字（在所选常用字范围内）</li>
+        <li style="margin-bottom: 4px;"><mark class="hl-purple">紫色高亮</mark>：替换为不同声调的常用字（在所选常用字范围内）</li>
+        <li style="margin-bottom: 4px;"><mark class="hl-red">红色高亮</mark>：替换为读音相同但不常用的字或无合适替换</li>
+        <li style="margin-bottom: 4px;"><mark class="hl-lightgreen">浅绿色高亮</mark>：表示该常用汉字（前300字）有多种读音（多音字）</li>
+        <li style="margin-bottom: 4px;"><mark class="hl-green">绿色高亮</mark>：表示该汉字有多种读音（多音字）</li>
+      </ul>
+    </div>
+  </main>
+</body>
+</html>
