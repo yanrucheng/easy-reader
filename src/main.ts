@@ -19,13 +19,72 @@ function getPinyinWithoutTone(char: string): string {
   return result[0]?.[0] || char;
 }
 
-function hasMultiplePronunciations(char: string): boolean {
+function getAllPronunciations(char: string): string[] {
   const result = pinyin(char, {
     style: pinyin.STYLE_TONE2, // We need tone2 style to be consistent with the rest of the code
     heteronym: true
   });
 
   const pronunciations = result[0] || [];
+
+  // Filter out duplicates
+  return [...new Set(pronunciations)];
+}
+
+function getAlternativeCharactersForPronunciation(pronunciation: string, excludeChar: string, maxResults: number = 2): string[] {
+  // Get all characters with the exact same pronunciation (including tone)
+  const sameToneChars = pronunciationMap.get(pronunciation) || [];
+
+  // Filter out the original character and multi-pronunciation characters, then take the most frequent ones
+  const filtered = sameToneChars.filter(char =>
+    char !== excludeChar && !hasMultiplePronunciations(char)
+  );
+
+  // Return the top N results
+  return filtered.slice(0, maxResults);
+}
+
+function getAlternativeCharactersForPronunciationWithoutTone(basePronunciation: string, excludeChar: string, maxResults: number = 2): string[] {
+  const alternatives: string[] = [];
+
+  // Search all characters with the same base pronunciation (ignoring tone)
+  for (const [, chars] of pronunciationMap.entries()) { // Using _ to indicate unused variable
+    const firstChar = chars[0];
+    if (!firstChar) continue;
+
+    const mapBasePronunciation = getPinyinWithoutTone(firstChar);
+    if (mapBasePronunciation === basePronunciation) {
+      // Find the first suitable character for this tone variation
+      const alternative = chars.find(char =>
+        char !== excludeChar && !hasMultiplePronunciations(char)
+      );
+
+      if (alternative && !alternatives.includes(alternative)) {
+        alternatives.push(alternative);
+        if (alternatives.length >= maxResults) {
+          break;
+        }
+      }
+    }
+  }
+
+  return alternatives;
+}
+
+function getAlternativeCharactersByPronunciation(pronunciation: string, excludeChar: string): { sameTone: string[]; differentTone: string[] } {
+  const basePronunciation = pronunciation.replace(/\d$/, '');
+
+  // Get alternatives with the exact same tone
+  const sameTone = getAlternativeCharactersForPronunciation(pronunciation, excludeChar);
+
+  // Get alternatives with different tones (same base pronunciation)
+  const differentTone = getAlternativeCharactersForPronunciationWithoutTone(basePronunciation, excludeChar);
+
+  return { sameTone, differentTone };
+}
+
+function hasMultiplePronunciations(char: string): boolean {
+  const pronunciations = getAllPronunciations(char);
 
   if (!allowDifferentTones) {
     // Default behavior - check if there are multiple pronunciations including tone differences
@@ -229,7 +288,18 @@ function transformHTML(text: string): string {
 
           // Mark as light green if top 300, otherwise regular green
           const highlightClass = isTop300 ? "hl-lightgreen" : "hl-green";
-          result += `<mark class="${highlightClass}">${char}</mark>`;
+
+          // Get all pronunciations for this character
+          const pronunciations = getAllPronunciations(char);
+
+          // Create a data attribute with all pronunciations and their alternatives
+          const pronunciationsData = pronunciations.map(pronunciation => {
+            const { sameTone, differentTone } = getAlternativeCharactersByPronunciation(pronunciation, char);
+            return `${pronunciation}:${sameTone.join(',')}:${differentTone.join(',')}`;
+          }).join('|');
+
+          // Add data attributes for hover menu
+          result += `<mark class="${highlightClass} pronunciation-menu-trigger" data-multipronounce="${pronunciationsData}" data-char="${char}">${char}</mark>`;
         } else {
           // Keep as is
           result += char;

@@ -165,5 +165,146 @@
     </div>
   </main>
   <script type="module" src="/src/main.ts"></script>
+  <style>
+    /* Hover menu styles */
+    .pronunciation-menu {
+      position: absolute;
+      background-color: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      min-width: 120px;
+    }
+
+    .pronunciation-menu-item {
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+      font-size: 16px;
+    }
+
+    .pronunciation-menu-item:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .pronunciation-group {
+      margin-bottom: 8px;
+    }
+
+    .pronunciation-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .pronunciation-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+      padding-left: 8px;
+    }
+  </style>
+  <script>
+    // Hover menu functionality
+    document.addEventListener('DOMContentLoaded', () => {
+      const outputContent = document.getElementById('outputContent');
+
+      // Create the menu element
+      const menu = document.createElement('div');
+      menu.className = 'pronunciation-menu';
+      menu.style.display = 'none';
+      document.body.appendChild(menu);
+
+      // Hover event listeners for all pronunciation triggers
+      let currentTarget = null;
+
+      outputContent?.addEventListener('mouseover', (e) => {
+        const target = e.target.closest('.pronunciation-menu-trigger');
+        if (target) {
+          currentTarget = target;
+          showMenu(target, menu);
+        } else if (!menu.contains(e.target)) {
+          hideMenu(menu);
+        }
+      });
+
+      outputContent?.addEventListener('mouseout', (e) => {
+        const target = e.relatedTarget;
+        if (!target || !menu.contains(target) && !e.target.closest('.pronunciation-menu-trigger')) {
+          hideMenu(menu);
+          currentTarget = null;
+        }
+      });
+
+      // Click handler for menu items
+      menu.addEventListener('click', (e) => {
+        const item = e.target.closest('.pronunciation-menu-item');
+        if (item && currentTarget) {
+          const replacementChar = item.textContent;
+          if (replacementChar && currentTarget) {
+            // Replace the character in the output
+            currentTarget.textContent = replacementChar;
+            // Update the data attribute to reflect the new character
+            currentTarget.setAttribute('data-char', replacementChar);
+          }
+          hideMenu(menu);
+        }
+      });
+
+      // Hide menu when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!menu.contains(e.target) && !e.target.closest('.pronunciation-menu-trigger')) {
+          hideMenu(menu);
+        }
+      });
+
+      function showMenu(target, menu) {
+        const data = target.getAttribute('data-multipronounce');
+        if (!data) return;
+
+        // Parse the data
+        const pronunciations = data.split('|').map(item => {
+          const [pronunciation, sameTone, differentTone] = item.split(':');
+          return {
+            pronunciation,
+            sameTone: sameTone.split(',').filter(Boolean),
+            differentTone: differentTone.split(',').filter(Boolean)
+          };
+        });
+
+        // Build the menu HTML
+        let html = '';
+        pronunciations.forEach(pronunciationData => {
+          html += `<div class="pronunciation-group">`;
+          html += `<div class="pronunciation-label">${pronunciationData.pronunciation}</div>`;
+
+          // Add same tone alternatives
+          pronunciationData.sameTone.forEach(char => {
+            html += `<div class="pronunciation-menu-item">${char}</div>`;
+          });
+
+          // Add different tone alternatives
+          pronunciationData.differentTone.forEach(char => {
+            html += `<div class="pronunciation-menu-item">${char}</div>`;
+          });
+
+          html += `</div>`;
+        });
+
+        menu.innerHTML = html;
+
+        // Position the menu
+        const rect = target.getBoundingClientRect();
+        menu.style.left = `${rect.left + window.scrollX}px`;
+        menu.style.top = `${rect.bottom + window.scrollY}px`;
+        menu.style.display = 'block';
+      }
+
+      function hideMenu(menu) {
+        menu.style.display = 'none';
+      }
+    });
+  </script>
 </body>
 </html>
