@@ -133,9 +133,25 @@ function initializeApp(): void {
   // Initialize switch state
   highlightMultiPronunciation = (multiPronunciationSwitch as HTMLInputElement).checked;
 
+  const outputContentElement = document.getElementById('outputContent');
+
   inputElement.addEventListener('input', updateOutput);
   outputElement.addEventListener('paste', handlePaste);
   copyButton.addEventListener('click', handleOutputCopy);
+
+  // Add event listener to detect output content changes
+  if (outputContentElement) {
+    const handleOutputChange = () => {
+      outputModifiedByUser = true;
+      (window as any).outputModifiedByUser = outputModifiedByUser;
+    };
+
+    // Detect content changes in the editable div
+    outputContentElement.addEventListener('input', handleOutputChange);
+    outputContentElement.addEventListener('paste', handleOutputChange);
+    outputContentElement.addEventListener('keydown', handleOutputChange);
+    outputContentElement.addEventListener('keyup', handleOutputChange);
+  }
   topKSlider.addEventListener('input', handleTopKChange);
   (toneSwitch as HTMLInputElement).addEventListener('change', handleToneSwitchChange);
   (multiPronunciationSwitch as HTMLInputElement).addEventListener('change', handleMultiPronunciationSwitchChange);
